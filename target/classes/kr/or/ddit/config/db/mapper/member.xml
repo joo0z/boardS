@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="member">	
+	<!-- 마이페이지 회원정보 -->
+	<select id="getMemberInfo" resultType="MemberVo">
+		SELECT * 
+    	FROM member 
+    	WHERE mem_id = #{mem_id}
+	</select>
+<!-- 	비밀번호 변경 -->
+	<update id="updatePass" parameterType="MemberVo">
+		update member set mem_pass = #{mem_pass}
+		where mem_id = #{mem_id}
+	</update>
+	<update id="dropMember" parameterType="MemberVo">
+		update member set mem_chk = 'N'
+		WHERE mem_id = #{mem_id}
+	</update>
+<!-- 회원등록 -->
+	<insert id="insertMember" parameterType="MemberVo">
+		INSERT INTO MEMBER(MEM_NO, MEM_ID, MEM_PASS, MEM_NAME, MEM_BIR, MEM_MAIL,
+		MEM_TEL, MEM_SDATE, MEM_EDATE, MEM_CHK)
+		VALUES(member_seq.NEXTVAL, #{mem_id}, #{mem_pass}, #{mem_name}, #{mem_bir}, #{mem_mail}, #{mem_tel},
+		sysdate, '99', 'Y')
+	</insert>
+
+</mapper>
+			
+			
