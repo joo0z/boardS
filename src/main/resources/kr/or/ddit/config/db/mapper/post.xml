@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="post">
+  <select id="getAllPost" parameterType="int" resultType="PostVo">
+  		SELECT * 
+		FROM post
+		WHERE board_no = #{board_no}
+		ORDER BY post_no DESC
+  </select>
+  
+<!--   page 설정 -->
+	<select id="selectPostPageList" resultType="PostVo" parameterType="PageVo">
+<!--   	 SELECT * -->
+<!-- 		FROM  -->
+<!-- 		    (SELECT rownum rn, a.* -->
+<!-- 		    	FROM -->
+<!-- 		        ((SELECT CONNECT_BY_ROOT(post_no) gn, LPAD(' ', (LEVEL-1)*3) || post_title -->
+<!-- 					FROM POST -->
+<!-- 					START WITH post_pno IS NULL AND board_no = #{board_no} -->
+<!-- 					CONNECT BY PRIOR post_no = post_pno) -->
+<!-- 					ORDER BY gn DESC, POST_NO ASC) a) -->
+<!-- 		WHERE rn BETWEEN (#{page} -1) * #{pageSize} + 1 AND #{page} * #{pageSize}   -->
+
+SELECT *
+   FROM
+       (SELECT ROWNUM rn, a.*
+       FROM
+           (select    board_no,
+             level boardlevel,
+            post_no,
+             post_pno,
+               case when level = 1 then '' else lpad('RE :', level*4, '-') end ||
+             case when post_status = 'N' then '**삭제된 게시글입니다.**'  else post_title end post_title,
+            user_id,
+             post_status,
+            post_regdate
+            from(select * from post where board_no = #{board_no})
+         start with  post_pno is null
+         connect by prior post_no = post_pno 
+         order siblings by post_regdate desc) a)
+      WHERE rn BETWEEN  (#{page}-1) * #{pageSize}+1   AND #{page} * #{pageSize}
+  </select>
+  <select id="selectPostTotalCnt" resultType="int" parameterType="int">
+  		SELECT COUNT(*)
+  		FROM post 
+  		WHERE board_no = #{board_no}
+  </select>
+  <select id="getPost" parameterType="int" resultType="PostVo">
+  	SELECT *
+	FROM post
+	WHERE post_no=#{post_no}
+  </select>
+  <insert id="createPost" parameterType="PostVo">
+  	INSERT INTO post (POST_TITLE, POST_CONTENT, POST_STATUS, POST_REGDATE, POST_NO, USER_ID, BOARD_NO)
+	VALUES (#{post_title}, #{post_content,jdbcType=VARCHAR}, #{post_status}, SYSDATE, POST_SEQ.NEXTVAL, 
+			#{user_id}, #{board_no})
+  	<selectKey keyProperty="post_no" resultType="int">
+  		SELECT POST_SEQ.CURRVAL FROM dual
+  	</selectKey>
+  </insert>
+  <insert id="createFile" parameterType="FileVo">
+  	INSERT INTO files (FILE_NO,FILE_NAME,FILE_REALNM,POST_NO)
+  	VALUES (FILE_SEQ.NEXTVAL, #{file_name}, #{file_realnm}, #{post_no})
+  </insert>
+  <select id="getAllFile" parameterType="int" resultType="FileVo">
+  	SELECT *
+	FROM files
+	WHERE post_no= #{post_no}
+  </select>
+  <update id="deletePost" parameterType="int">
+  	UPDATE post 
+	SET post_status = 'N' 
+	WHERE post_no = #{post_no}
+  </update>
+  <select id="getFile" parameterType="int" resultType="FileVo">
+  	SELECT *
+	FROM files
+	WHERE file_no= #{file_no}
+  </select>
+  <update id="updatePost" parameterType="PostVo">
+  	UPDATE post SET post_title = #{post_title}, 
+  					post_content = #{post_content}, 
+  					board_no= #{board_no}
+	WHERE post_no=  #{post_no}
+  </update>
+  <update id="updateFile" parameterType="FileVo">
+  	UPDATE files SET file_name = #{file_name}, 
+  					 file_realnm = #{file_realnm}
+  					 board_no = #{board_no}
+	WHERE file_no=  #{file_no}
+  </update>
+  <delete id="deleteFile" parameterType="int">
+  	DELETE files
+	WHERE file_no = #{file_no}
+ </delete>
+<!--   reply -->
+<!--  <select id="getAllReply" resultType="ReplyVo" parameterType="int"> -->
+<!--  	SELECT *  -->
+<!-- 	FROM reply -->
+<!-- 	WHERE post_no = #{post_no} -->
+<!-- 	ORDER BY reply_no DESC -->
+<!--  </select> -->
+<!--  <insert id="createReply" parameterType="ReplyVo"> -->
+<!--  	INSERT INTO reply (REPLY_NO,REPLY_CONTENT,REPLY_STATUS,REPLY_REGDATE,USER_ID,POST_NO) -->
+<!-- 	VALUES 	(reply_SEQ.NEXTVAL, #{reply_content}, #{reply_status}, SYSDATE, #{user_id}, #{post_no}) -->
+<!--  </insert> -->
+<!--  <update id="deleteReply" parameterType="int"> -->
+<!--  	UPDATE reply -->
+<!-- 	SET reply_status = 'N'  -->
+<!-- 	WHERE reply_no = #{reply_no} -->
+<!--  </update> -->
+<!--  답글 -->
+<!--  <insert id="createAnswer" parameterType="PostVo"> -->
+<!--   	INSERT INTO post (POST_TITLE, POST_CONTENT, POST_STATUS, POST_REGDATE, POST_NO, USER_ID, BOARD_NO, POST_PNO) -->
+<!-- 	VALUES (#{post_title}, #{post_content}, #{post_status}, SYSDATE, POST_SEQ.NEXTVAL,  -->
+<!-- 			#{user_id}, #{board_no}, #{post_pno}) -->
+<!--   	<selectKey keyProperty="post_no" resultType="int"> -->
+<!--   		SELECT POST_SEQ.CURRVAL FROM dual -->
+<!--   	</selectKey> -->
+<!--  </insert> -->
+  
+</mapper>
